@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Game {
 	//array of the pieces
 	//NOTE: *Square* is not referring to the square itself, but the piece on it, meaning Square.color refers to the piece's color instead of the square's color
-	Square[][] board = new Square[8][8];
+	public Square[][] board = new Square[8][8];
 	//History of all moves played this game
 	ArrayList<Move> history = new ArrayList<Move>();
 	//Which color is next to move
@@ -187,7 +187,7 @@ public class Game {
 			//x and y being repurposed for an increment to the new value rather than the new value (as rook does)
 			for(i = -2; i < 3; i++) {
 				for(j = -2; j < 3; j++) {
-					if(i != 0 && j != 0 && x+i < 8 && x+i < -1 && y+i < 8 && y+i < -1) { // if x and y are not 0 && move is within bounds && wouldn't take a piece of its own color, add it to possible moves
+					if(x+i < 8 && x+i > -1 && y+j < 8 && y+j > -1 && (Math.abs(i) + Math.abs(j) == 3)) { // if x and y are not 0 && move is within bounds && wouldn't take a piece of its own color, add it to possible moves
 						if(board[x][y].color != board[x+i][y+j].color) {
 							possibleMoves.add(new Move(x, y, x + i, y + j));
 						}
@@ -474,10 +474,19 @@ public class Game {
 		} else {
 			nextToMove = Color.White;
 		}
+		//place piece at ending square
 		board[move.endingX][move.endingY].type = board[move.startingX][move.startingY].type;
 		board[move.endingX][move.endingY].color = board[move.startingX][move.startingY].color;
 		board[move.endingX][move.endingY].hasMoved = true;
-		for(int i = 0; i < 8; i++) {		//make all pieces' moved2 false
+		//en passant case (remove taken pawn)
+				if(board[move.startingX][move.startingY].type == Piece.Pawn && board[move.startingX][move.endingY].type == Piece.Pawn && board[move.startingX][move.endingY].moved2 == true) {
+					board[move.startingX][move.endingY].type = null;
+					board[move.startingX][move.endingY].moved2 = false;
+					board[move.startingX][move.endingY].color = null;
+				}
+
+		//make every pieces' move2 false
+		for(int i = 0; i < 8; i++) {		
 			for(int j = 0; j < 8; j++) {
 				board[i][j].moved2 = false;
 			}
@@ -489,8 +498,8 @@ public class Game {
 		board[move.startingX][move.startingY].type = null;
 		board[move.startingX][move.startingY].moved2 = false;
 		board[move.startingX][move.startingY].color = null;
-
-
+		
+		
 		//add to history
 		history.add(move);
 	}
