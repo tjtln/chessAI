@@ -10,6 +10,8 @@ public class Game {
 	ArrayList<Move> history = new ArrayList<Move>();
 	//Which color is next to move
 	Color nextToMove = Color.White;
+	//All attacked squares
+	public ArrayList<int[]> allAttackedSquares = new ArrayList<int[]>();
 	public Game() {
 		//Initializing all of the pieces
 		for(int i = 0; i < 8; i++) {
@@ -55,6 +57,7 @@ public class Game {
 				}
 			}
 		}
+		findAttackedSquares();
 	}
 	//if given a move, checks if the move is legal
 	public boolean isLegal(Move move){
@@ -404,6 +407,11 @@ public class Game {
 					}
 				}
 			}
+			//testing for white castling short
+			if(x == 7 && y == 4 && board[x][y].color == Color.White && board[x][y].hasMoved == false && board[7][7].hasMoved == false && board[7][7].type == Piece.Rook && board[7][7].color == Color.White) {
+				//King and Rook have not moved
+				//TODO
+			}
 			break;
 		case Pawn:
 			if(board[x][y].color == Color.White) {
@@ -467,6 +475,69 @@ public class Game {
 		return possibleMoves;
 	}
 
+	//updates allAttackedSquares
+	ArrayList<int[]> findAttackedSquares(){
+		allAttackedSquares.clear();
+		ArrayList<Move> temp = new ArrayList<Move>();
+		for(int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				if(board[i][j].type != null && board[i][j].color == nextToMove) {
+					if(board[i][j].type == Piece.Pawn) {
+						if(board[i][j].color == Color.White) {
+							if(j < 7 && i > 0) {
+								int[] move = new int[2];
+								move[0] = i - 1;
+								move[1] = j + 1;
+								allAttackedSquares.add(move);
+							}
+							if(j > 0 && i > 0) {
+								int[] move = new int[2];
+								move[0] = i - 1;
+								move[1] = j - 1;
+								allAttackedSquares.add(move);
+							}
+						} else {
+							if(j < 7 && i < 7) {
+								int[] move = new int[2];
+								move[0] = i + 1;
+								move[1] = j + 1;
+								allAttackedSquares.add(move);
+							}
+							if(j > 0 && i < 7) {
+								int[] move = new int[2];
+								move[0] = i + 1;
+								move[1] = j - 1;
+								allAttackedSquares.add(move);
+							}
+
+						}
+					} 
+					temp = findPossibleMoves(i, j);
+					for(int k = 0; k < temp.size(); k++) {
+						if(!(board[i][j].type == Piece.Pawn && temp.get(k).startingY == temp.get(k).endingY)) {
+							int[] move = new int[2];
+							move[0] = temp.get(k).endingX;
+							move[1] = temp.get(k).endingY;
+							allAttackedSquares.add(move);
+						}
+					}
+				}
+			}
+		}
+		return allAttackedSquares;
+	}
+
+	//calls findAttackedSquares to ensure it is updated
+	public boolean isAttacked(int x, int y) {
+		findAttackedSquares();
+		for(int i = 0; i < allAttackedSquares.size(); i++) {
+			if(allAttackedSquares.get(i)[0] == x && allAttackedSquares.get(i)[1] == y) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public void update(Move move){	//updates board with a given moves without any checks
 		//updates turn color
 		if(nextToMove == Color.White) {
@@ -479,11 +550,11 @@ public class Game {
 		board[move.endingX][move.endingY].color = board[move.startingX][move.startingY].color;
 		board[move.endingX][move.endingY].hasMoved = true;
 		//en passant case (remove taken pawn)
-				if(board[move.startingX][move.startingY].type == Piece.Pawn && board[move.startingX][move.endingY].type == Piece.Pawn && board[move.startingX][move.endingY].moved2 == true) {
-					board[move.startingX][move.endingY].type = null;
-					board[move.startingX][move.endingY].moved2 = false;
-					board[move.startingX][move.endingY].color = null;
-				}
+		if(board[move.startingX][move.startingY].type == Piece.Pawn && board[move.startingX][move.endingY].type == Piece.Pawn && board[move.startingX][move.endingY].moved2 == true) {
+			board[move.startingX][move.endingY].type = null;
+			board[move.startingX][move.endingY].moved2 = false;
+			board[move.startingX][move.endingY].color = null;
+		}
 
 		//make every pieces' move2 false
 		for(int i = 0; i < 8; i++) {		
@@ -498,10 +569,13 @@ public class Game {
 		board[move.startingX][move.startingY].type = null;
 		board[move.startingX][move.startingY].moved2 = false;
 		board[move.startingX][move.startingY].color = null;
-		
-		
+
+
 		//add to history
 		history.add(move);
+		
+		//find new attacked squares
+		findAttackedSquares();
 	}
 	public void updateMoves(ArrayList<Move> moves) {
 		for(int i = 0; i < moves.size(); i++) {

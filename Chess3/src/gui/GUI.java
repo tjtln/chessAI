@@ -100,6 +100,7 @@ public class GUI extends JPanel implements ActionListener {
 				board.update(move);
 				for(int i = 0; i < 8; i++) {
 					for(int j = 0; j < 8; j++) {
+						//setting piece icons
 						Piece piece = board.board[i][j].type;
 						if(piece != null) {
 							if (board.board[i][j].color == Chess3.Color.White) {
@@ -148,6 +149,17 @@ public class GUI extends JPanel implements ActionListener {
 						} else {
 							squares[i][j].setIcon(null);
 						}
+						//setting attacked squares
+						if(board.isAttacked(i,j)) {
+							squares[i][j].setBackground(Color.red);
+						} else {
+							if((i+j) % 2 == 0) {
+								squares[i][j].setBackground(new Color(240,240,240));
+							} else {
+								squares[i][j].setBackground(new Color(0,120,0));
+							}
+						}
+
 					}
 				}
 			}
