@@ -12,6 +12,7 @@ public class Game {
 	Color nextToMove = Color.White;
 	//All attacked squares
 	public ArrayList<int[]> allAttackedSquares = new ArrayList<int[]>();
+	public ArrayList<int[]> lastAttackedSquares = new ArrayList<int[]>();
 	public Game() {
 		//Initializing all of the pieces
 		for(int i = 0; i < 8; i++) {
@@ -101,16 +102,9 @@ public class Game {
 				}
 			}
 
-		for(int i = 0; i < 8; i++) {
-			for(int j = 0; j < 8; j++) {
-				if(nextBoard.nextToMove == nextBoard.board[i][j].color) {
-					ArrayList<Move> moves = nextBoard.findPossibleMoves(i, j);
-					for(int k = 0; k < moves.size(); k++) {
-						if(moves.get(k).endingX == kingX && moves.get(k).endingY == kingY) {
-							return true;
-						}
-					}
-				}
+		for(int i = 0; i < nextBoard.allAttackedSquares.size(); i++) {
+			if(nextBoard.allAttackedSquares.get(i)[0] == kingX && nextBoard.allAttackedSquares.get(i)[1] == kingY) {
+				return true;
 			}
 		}
 
@@ -409,8 +403,35 @@ public class Game {
 			}
 			//testing for white castling short
 			if(x == 7 && y == 4 && board[x][y].color == Color.White && board[x][y].hasMoved == false && board[7][7].hasMoved == false && board[7][7].type == Piece.Rook && board[7][7].color == Color.White) {
-				//King and Rook have not moved
-				//TODO
+				if(board[7][6].type == null && board[7][5].type == null) {
+					if(!wasAttacked(7,4) && !wasAttacked(7,5) && !wasAttacked(7,6)) {
+						possibleMoves.add(new Move (7,4,7,6));
+					}	
+				}
+			}
+			//testing for white castling long
+			if(x == 7 && y == 4 && board[x][y].color == Color.White && board[x][y].hasMoved == false && board[7][0].hasMoved == false && board[7][0].type == Piece.Rook && board[7][0].color == Color.White) {
+				if(board[7][3].type == null && board[7][2].type == null && board[7][1].type == null) {
+					if(!wasAttacked(7,4) && !wasAttacked(7,3) && !wasAttacked(7,2)) {
+						possibleMoves.add(new Move (7,4,7,2));
+					}	
+				}
+			}
+			//testing for black castling short
+			if(x == 0 && y == 4 && board[x][y].color == Color.Black && board[x][y].hasMoved == false && board[0][0].hasMoved == false && board[0][0].type == Piece.Rook && board[0][0].color == Color.Black) {
+				if(board[0][5].type == null && board[0][5].type == null) {
+					if(!wasAttacked(0,4) && !wasAttacked(0,5) && !wasAttacked(0,6)) {
+						possibleMoves.add(new Move (0,4,0,6));
+					}	
+				}
+			}
+			//testing for black castling long
+			if(x == 0 && y == 4 && board[x][y].color == Color.Black && board[x][y].hasMoved == false && board[0][7].hasMoved == false && board[0][7].type == Piece.Rook && board[0][7].color == Color.Black) {
+				if(board[0][3].type == null && board[0][2].type == null && board[0][1].type == null) {
+					if(!wasAttacked(0,4) && !wasAttacked(0,3) && !wasAttacked(0,2)) {
+						possibleMoves.add(new Move (0,4,0,2));
+					}	
+				}
 			}
 			break;
 		case Pawn:
@@ -527,12 +548,21 @@ public class Game {
 		return allAttackedSquares;
 	}
 
-	//calls findAttackedSquares to ensure it is updated
 	public boolean isAttacked(int x, int y) {
-		findAttackedSquares();
 		for(int i = 0; i < allAttackedSquares.size(); i++) {
 			if(allAttackedSquares.get(i)[0] == x && allAttackedSquares.get(i)[1] == y) {
 				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean wasAttacked(int x, int y) {
+		if(lastAttackedSquares.size() > 0) {
+			for(int i = 0; i < lastAttackedSquares.size(); i++) {
+				if(lastAttackedSquares.get(i)[0] == x && lastAttackedSquares.get(i)[1] == y) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -555,7 +585,49 @@ public class Game {
 			board[move.startingX][move.endingY].moved2 = false;
 			board[move.startingX][move.endingY].color = null;
 		}
-
+		//castle case
+		if(board[move.startingX][move.startingY].type == Piece.King && Math.abs(move.startingY - move.endingY) == 2) {
+			if(move.endingX == 7 && move.endingY == 6) {
+				//removing rook
+				board[7][7].type = null;
+				board[7][7].moved2 = false;
+				board[7][7].color = null;
+				//adding rook
+				board[7][5].type = Piece.Rook;
+				board[7][5].moved2 = false;
+				board[7][5].color = Color.White;
+			}
+			if(move.endingX == 7 && move.endingY == 2) {
+				//removing rook
+				board[7][0].type = null;
+				board[7][0].moved2 = false;
+				board[7][0].color = null;
+				//adding rook
+				board[7][3].type = Piece.Rook;
+				board[7][3].moved2 = false;
+				board[7][3].color = Color.White;
+			}
+			if(move.endingX == 0 && move.endingY == 6) {
+				//removing rook
+				board[0][7].type = null;
+				board[0][7].moved2 = false;
+				board[0][7].color = null;
+				//adding rook
+				board[0][5].type = Piece.Rook;
+				board[0][5].moved2 = false;
+				board[0][5].color = Color.Black;
+			}
+			if(move.endingX == 7 && move.endingY == 6) {
+				//removing rook
+				board[0][7].type = null;
+				board[0][7].moved2 = false;
+				board[0][7].color = null;
+				//adding rook
+				board[0][3].type = Piece.Rook;
+				board[0][3].moved2 = false;
+				board[0][3].color = Color.Black;
+			}
+		}
 		//make every pieces' move2 false
 		for(int i = 0; i < 8; i++) {		
 			for(int j = 0; j < 8; j++) {
@@ -573,7 +645,8 @@ public class Game {
 
 		//add to history
 		history.add(move);
-		
+		lastAttackedSquares.clear();
+		lastAttackedSquares.addAll(allAttackedSquares);
 		//find new attacked squares
 		findAttackedSquares();
 	}
